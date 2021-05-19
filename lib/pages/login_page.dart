@@ -81,7 +81,7 @@ class _LoginForm extends StatelessWidget {
         children: [
           SafeArea(
             child: Container(
-              height: size.height * 0.30,
+              height: 200.0,
             ),
           ),
           Container(
@@ -109,6 +109,14 @@ class _LoginForm extends StatelessWidget {
               ],
             ),
           ),
+          InkWell(
+            onTap: () {},
+            child: Text(
+              '¿Olvidaste la contraseña?',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ),
+          SizedBox(height: 100.0),
         ],
       ),
     );
@@ -153,7 +161,7 @@ class _Button extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ButtonStyle(
-          elevation: MaterialStateProperty.resolveWith((states) => 10.0)),
+          elevation: MaterialStateProperty.resolveWith((states) => 5.0)),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 30.0),
         child: Text('Iniciar sesión'),
