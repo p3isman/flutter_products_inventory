@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:products/bloc/login_bloc.dart';
+import 'package:products/bloc/provider.dart';
+import 'package:products/pages/home_page.dart';
+
 class LoginPage extends StatelessWidget {
   static final routeName = 'login';
 
@@ -74,6 +78,7 @@ class _LoginBackground extends StatelessWidget {
 class _LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final bloc = Provider.of(context);
     final size = MediaQuery.of(context).size;
 
     return SingleChildScrollView(
@@ -102,17 +107,17 @@ class _LoginForm extends StatelessWidget {
               children: [
                 Text('Iniciar Sesión', style: TextStyle(fontSize: 20.0)),
                 SizedBox(height: 10.0),
-                _Email(),
-                _Password(),
+                _Email(bloc),
+                _Password(bloc),
                 SizedBox(height: 20.0),
-                _Button(),
+                _Button(bloc),
               ],
             ),
           ),
           InkWell(
             onTap: () {},
             child: Text(
-              '¿Olvidaste la contraseña?',
+              '¿Olvidaste tu contraseña?',
               style: TextStyle(color: Colors.black54),
             ),
           ),
@@ -121,52 +126,95 @@ class _LoginForm extends StatelessWidget {
       ),
     );
   }
+
+  static String? showError(snapshot) {
+    if (snapshot.hasError) {
+      return snapshot.error.toString();
+    }
+    return null;
+  }
 }
 
 class _Email extends StatelessWidget {
+  final LoginBloc bloc;
+
+  _Email(this.bloc);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: TextField(
-        keyboardType: TextInputType.emailAddress,
-        decoration: InputDecoration(
-          icon: Icon(Icons.alternate_email),
-          labelText: 'Correo electrónico',
-          hintText: 'ejemplo@correo.com',
-        ),
-      ),
+    return StreamBuilder(
+      stream: bloc.emailStream,
+      builder: (context, AsyncSnapshot<String> snapshot) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+          child: TextField(
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              icon: Icon(Icons.alternate_email),
+              labelText: 'Correo electrónico',
+              hintText: 'ejemplo@correo.com',
+              counterText: snapshot.data,
+              errorText: _LoginForm.showError(snapshot),
+            ),
+            onChanged: bloc.changeEmail,
+          ),
+        );
+      },
     );
   }
 }
 
 class _Password extends StatelessWidget {
+  final LoginBloc bloc;
+
+  _Password(this.bloc);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: TextField(
-        obscureText: true,
-        decoration: InputDecoration(
-          icon: Icon(Icons.lock_outline),
-          labelText: 'Contraseña',
-        ),
-      ),
+    return StreamBuilder(
+      stream: bloc.passwordStream,
+      builder: (context, AsyncSnapshot<String> snapshot) {
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+          child: TextField(
+            obscureText: true,
+            decoration: InputDecoration(
+              icon: Icon(Icons.lock_outline),
+              labelText: 'Contraseña',
+              counterText: snapshot.data,
+              errorText: _LoginForm.showError(snapshot),
+            ),
+            onChanged: bloc.changePassword,
+          ),
+        );
+      },
     );
   }
 }
 
 class _Button extends StatelessWidget {
+  final LoginBloc bloc;
+
+  _Button(this.bloc);
+
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ButtonStyle(
-          elevation: MaterialStateProperty.resolveWith((states) => 5.0)),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 30.0),
-        child: Text('Iniciar sesión'),
-      ),
-      onPressed: () {},
+    return StreamBuilder<Object>(
+      stream: bloc.validFormStream,
+      builder: (context, AsyncSnapshot snapshot) {
+        return ElevatedButton(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 30.0),
+            child: Text('Iniciar sesión'),
+          ),
+          onPressed: snapshot.hasData ? () => _login(bloc, context) : null,
+        );
+      },
     );
   }
+}
+
+// Called on submit
+void _login(LoginBloc bloc, BuildContext context) {
+  Navigator.pushReplacementNamed(context, HomePage.routeName);
 }
