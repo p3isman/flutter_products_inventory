@@ -6,6 +6,7 @@ import 'package:products/bloc/provider.dart';
 import 'package:products/pages/home_page.dart';
 import 'package:products/pages/login_page.dart';
 import 'package:products/pages/product_page.dart';
+import 'package:products/pages/register_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,11 +21,12 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(primarySwatch: Colors.teal),
           debugShowCheckedModeBanner: false,
           title: 'Products app',
-          initialRoute: HomePage.routeName,
+          initialRoute: RegisterPage.routeName,
           routes: {
             HomePage.routeName: (context) => HomePage(),
             LoginPage.routeName: (context) => LoginPage(),
             ProductPage.routeName: (context) => ProductPage(),
+            RegisterPage.routeName: (context) => RegisterPage(),
           }),
     );
   }

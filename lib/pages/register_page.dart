@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:products/bloc/login_bloc.dart';
 import 'package:products/bloc/provider.dart';
 import 'package:products/pages/home_page.dart';
-import 'package:products/pages/register_page.dart';
+import 'package:products/pages/login_page.dart';
+import 'package:products/providers/user_provider.dart';
 
-class LoginPage extends StatelessWidget {
-  static final routeName = 'login';
+final userProvider = new UserProvider();
+
+class RegisterPage extends StatelessWidget {
+  static final routeName = 'register';
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +109,7 @@ class _LoginForm extends StatelessWidget {
                 ]),
             child: Column(
               children: [
-                Text('Iniciar Sesión', style: TextStyle(fontSize: 20.0)),
+                Text('Crear cuenta', style: TextStyle(fontSize: 20.0)),
                 SizedBox(height: 10.0),
                 _Email(bloc),
                 _Password(bloc),
@@ -117,9 +120,9 @@ class _LoginForm extends StatelessWidget {
           ),
           TextButton(
             onPressed: () =>
-                Navigator.pushReplacementNamed(context, RegisterPage.routeName),
+                Navigator.pushReplacementNamed(context, LoginPage.routeName),
             child: Text(
-              'Crear una nueva cuenta.',
+              '¿Ya tienes una cuenta? Inicia sesión.',
               style: TextStyle(color: Colors.black54),
             ),
           ),
@@ -207,9 +210,9 @@ class _Button extends StatelessWidget {
         return ElevatedButton(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 30.0),
-            child: Text('Iniciar sesión'),
+            child: Text('Crear cuenta'),
           ),
-          onPressed: snapshot.hasData ? () => _login(bloc, context) : null,
+          onPressed: snapshot.hasData ? () => _register(bloc, context) : null,
         );
       },
     );
@@ -217,6 +220,8 @@ class _Button extends StatelessWidget {
 }
 
 // Called on submit
-void _login(LoginBloc bloc, BuildContext context) {
+void _register(LoginBloc bloc, BuildContext context) {
+  userProvider.newUser(bloc.email, bloc.password);
+
   Navigator.pushReplacementNamed(context, HomePage.routeName);
 }
