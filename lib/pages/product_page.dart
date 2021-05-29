@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:products/bloc/products_bloc.dart';
+import 'package:products/bloc/provider.dart';
 
 import 'package:products/models/product_model.dart';
-import 'package:products/providers/products_provider.dart';
 import 'package:products/utils/utils.dart' as utils;
 
 final _formKey = GlobalKey<FormState>();
-final _productsProvider = new ProductsProvider();
-bool disableButton = false;
+bool _disableButton = false;
 
 class ProductPage extends StatefulWidget {
   static final String routeName = 'product';
@@ -22,8 +22,18 @@ class _ProductPageState extends State<ProductPage> {
   Product product = new Product();
   File? image;
 
+  ProductsBloc? productsBloc;
+
+  @override
+  void dispose() {
+    super.dispose();
+    productsBloc!.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    productsBloc = Provider.productsBloc(context);
+
     final productData = ModalRoute.of(context)!.settings.arguments;
 
     if (productData != null) product = productData as Product;
@@ -55,7 +65,7 @@ class _ProductPageState extends State<ProductPage> {
                 _PriceField(product),
                 _Available(product),
                 SizedBox(height: 15.0),
-                _SaveButton(product, productData, image),
+                _SaveButton(product, productsBloc!, productData, image),
               ],
             ),
           ),
@@ -148,11 +158,12 @@ class __AvailableState extends State<_Available> {
 }
 
 class _SaveButton extends StatefulWidget {
-  _SaveButton(this.product, [this.productData, this.image]);
+  _SaveButton(this.product, this.productsBloc, [this.productData, this.image]);
 
   final Product product;
   final productData;
   final File? image;
+  final ProductsBloc productsBloc;
 
   @override
   __SaveButtonState createState() => __SaveButtonState();
@@ -173,7 +184,7 @@ class __SaveButtonState extends State<_SaveButton> {
       ),
       icon: Icon(Icons.save),
       label: widget.productData == null ? Text('Guardar') : Text('Actualizar'),
-      onPressed: disableButton ? null : () => _submit(context),
+      onPressed: _disableButton ? null : () => _submit(context),
     );
   }
 
@@ -185,25 +196,25 @@ class __SaveButtonState extends State<_SaveButton> {
     _formKey.currentState!.save();
 
     setState(() {
-      disableButton = true;
+      _disableButton = true;
     });
 
     // Upload image to cloud and assing its url to product
     if (widget.image != null) {
       widget.product.pictureUrl =
-          await _productsProvider.uploadImage(widget.image);
+          await widget.productsBloc.uploadImage(widget.image);
     }
 
     // If we are not editing a product, create it. Otherwise, update it.
     if (widget.productData == null) {
-      await _productsProvider.createProduct(widget.product);
+      await widget.productsBloc.createProduct(widget.product);
     } else
-      await _productsProvider.updateProduct(widget.product);
+      await widget.productsBloc.updateProduct(widget.product);
 
     _showSnackbar(context, 'Producto actualizado');
 
     setState(() {
-      disableButton = false;
+      _disableButton = false;
     });
 
     // Return to home screen

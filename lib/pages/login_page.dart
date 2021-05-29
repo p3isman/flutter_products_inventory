@@ -4,6 +4,11 @@ import 'package:products/bloc/login_bloc.dart';
 import 'package:products/bloc/provider.dart';
 import 'package:products/pages/home_page.dart';
 import 'package:products/pages/register_page.dart';
+import 'package:products/providers/user_provider.dart';
+import 'package:products/utils/utils.dart';
+
+final _userProvider = UserProvider();
+bool _disableButton = false;
 
 class LoginPage extends StatelessWidget {
   static final routeName = 'login';
@@ -194,29 +199,50 @@ class _Password extends StatelessWidget {
   }
 }
 
-class _Button extends StatelessWidget {
+class _Button extends StatefulWidget {
   final LoginBloc bloc;
 
   _Button(this.bloc);
 
   @override
+  __ButtonState createState() => __ButtonState();
+}
+
+class __ButtonState extends State<_Button> {
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<Object>(
-      stream: bloc.validFormStream,
+      stream: widget.bloc.validFormStream,
       builder: (context, AsyncSnapshot snapshot) {
         return ElevatedButton(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 30.0),
             child: Text('Iniciar sesión'),
           ),
-          onPressed: snapshot.hasData ? () => _login(bloc, context) : null,
+          onPressed: _disableButton
+              ? null
+              : snapshot.hasData
+                  ? () => _login(widget.bloc, context)
+                  : null,
         );
       },
     );
   }
-}
 
-// Called on submit
-void _login(LoginBloc bloc, BuildContext context) {
-  Navigator.pushReplacementNamed(context, HomePage.routeName);
+  void _login(LoginBloc bloc, BuildContext context) async {
+    setState(() => _disableButton = true);
+    Map<String, dynamic> info =
+        await _userProvider.login(bloc.email, bloc.password);
+
+    info['ok']
+        ? Navigator.pushReplacementNamed(context, HomePage.routeName)
+        : showAlert(
+            context,
+            getErrorMessage(
+              info,
+              action: 'login',
+            ),
+          );
+    setState(() => _disableButton = true);
+  }
 }

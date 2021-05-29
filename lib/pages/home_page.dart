@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:products/bloc/products_bloc.dart';
 
 import 'package:products/bloc/provider.dart';
 import 'package:products/models/product_model.dart';
 import 'package:products/pages/product_page.dart';
-import 'package:products/providers/products_provider.dart';
-
-final _productsProvider = new ProductsProvider();
 
 class HomePage extends StatefulWidget {
   static final routeName = 'home';
@@ -15,16 +13,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  ProductsBloc? productsBloc;
+
+  @override
+  void dispose() {
+    super.dispose();
+    productsBloc!.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bloc = Provider.of(context);
+    productsBloc = Provider.productsBloc(context);
+    productsBloc!.loadProducts();
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
       ),
       body: RefreshIndicator(
-        child: _Body(_updateHome),
+        child: _Body(_updateHome, productsBloc!),
         onRefresh: _updateHome,
       ),
       floatingActionButton: _AddProductButton(_updateHome),
@@ -55,21 +62,23 @@ class _AddProductButton extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  _Body(this.updateHome);
+  _Body(this.updateHome, this.productsBloc);
 
   final Function updateHome;
+  final ProductsBloc productsBloc;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _productsProvider.loadProducts(),
+    return StreamBuilder(
+      stream: productsBloc.productsStream,
       builder: (BuildContext context, AsyncSnapshot<List<Product>> snapshot) {
         if (snapshot.hasData) {
           final products = snapshot.data!;
 
           return ListView.builder(
             itemCount: products.length,
-            itemBuilder: (context, i) => _Item(products[i], updateHome),
+            itemBuilder: (context, i) =>
+                _Item(products[i], updateHome, productsBloc),
           );
         } else {
           return Center(
@@ -82,10 +91,11 @@ class _Body extends StatelessWidget {
 }
 
 class _Item extends StatelessWidget {
-  _Item(this.product, this.updateHome);
+  _Item(this.product, this.updateHome, this.productsBloc);
 
   final Product product;
   final Function updateHome;
+  final ProductsBloc productsBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +104,7 @@ class _Item extends StatelessWidget {
       background: Container(
         color: Colors.red,
       ),
-      onDismissed: (direction) => _productsProvider.deleteProduct(product.id!),
+      onDismissed: (direction) => productsBloc.deleteProduct(product.id!),
       child: Card(
         child: Column(
           children: [

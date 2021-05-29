@@ -6,44 +6,51 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime_type/mime_type.dart';
 
 import 'package:products/models/product_model.dart';
+import 'package:products/user_preferences/user_preferences.dart';
 
 class ProductsProvider {
   final String _database =
       'products-app-fc899-default-rtdb.europe-west1.firebasedatabase.app';
 
+  final _prefs = new UserPreferences();
+
   /// Stores a product in Firebase database
   Future<bool> createProduct(Product product) async {
-    final url = Uri.https(_database, 'products.json');
+    final url = Uri.https(_database, 'products.json?auth=${_prefs.token}');
     final resp = await http.post(url, body: productToJson(product));
 
     final decodedData = json.decode(resp.body);
 
-    print(decodedData);
-
-    // return decodedData['name'];
+    if (decodedData['error'] != null) return false;
 
     return true;
   }
 
+  /// Updates a product data
   Future<bool> updateProduct(Product product) async {
-    final url = Uri.https(_database, 'products/${product.id}.json');
+    final url = Uri.https(
+        _database, 'products/${product.id}.json?auth=${_prefs.token}');
     final resp = await http.put(url, body: productToJson(product));
 
     final decodedData = json.decode(resp.body);
 
-    print(decodedData);
+    if (decodedData['error'] != null) return false;
 
     return true;
   }
 
   /// Returns products from Firebase database
   Future<List<Product>> loadProducts() async {
-    final url = Uri.https(_database, 'products.json');
+    final url = Uri.https(_database, 'products.json?auth=${_prefs.token}');
     final resp = await http.get(url);
 
     final Map<String, dynamic>? decodedData = json.decode(resp.body);
 
+    // If there is no response
     if (decodedData == null) return [];
+
+    // If response returns an error, typically means the session token has expired
+    if (decodedData['error'] != null) return [];
 
     final List<Product> products = [];
 
@@ -59,10 +66,12 @@ class ProductsProvider {
 
   /// Deletes product from Firebase
   Future<String?> deleteProduct(String id) async {
-    final url = Uri.https(_database, 'products/$id.json');
+    final url = Uri.https(_database, 'products/$id.json?auth=${_prefs.token}');
     final resp = await http.delete(url);
 
     final decodedData = json.decode(resp.body);
+
+    if (decodedData['error'] != null) return 'Error al borrar el producto';
 
     // Returns null if there are no errors
     return decodedData;

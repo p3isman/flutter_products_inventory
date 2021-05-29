@@ -3,12 +3,21 @@ import 'package:flutter/services.dart';
 
 import 'package:products/bloc/provider.dart';
 
+import 'package:products/user_preferences/user_preferences.dart';
+
 import 'package:products/pages/home_page.dart';
 import 'package:products/pages/login_page.dart';
 import 'package:products/pages/product_page.dart';
 import 'package:products/pages/register_page.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = new UserPreferences();
+  await prefs.initPrefs();
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -21,7 +30,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(primarySwatch: Colors.teal),
           debugShowCheckedModeBanner: false,
           title: 'Products app',
-          initialRoute: RegisterPage.routeName,
+          initialRoute: LoginPage.routeName,
           routes: {
             HomePage.routeName: (context) => HomePage(),
             LoginPage.routeName: (context) => LoginPage(),
