@@ -26,8 +26,8 @@ class _ProductPageState extends State<ProductPage> {
 
   @override
   void dispose() {
-    super.dispose();
     productsBloc!.dispose();
+    super.dispose();
   }
 
   @override
